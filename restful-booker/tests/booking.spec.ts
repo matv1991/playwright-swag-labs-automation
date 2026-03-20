@@ -129,3 +129,35 @@ data: updatedBooking
     expect(body.totalprice).toBe(updatedBooking.totalprice);
 
 });
+
+test('I am able to trigger the PATCH /booking/:id request', async ({ request }) => {
+
+const updatedBooking = {
+  firstname: "James PATCH",
+  lastname: "Smith PATCH",
+};
+
+    // Step 1 — Authenticate and retrieve token
+    const authResponse = await request.post('/auth', {
+        data: {
+            "username": "admin",
+            "password": "password123"
+        }
+    });
+const authBody = await authResponse.json();
+const token = authBody.token;
+
+// Step 2 — Send PATCH request with updated booking data and auth token
+const response = await request.patch(`/booking/${bookingId}`, {
+  headers: {
+    'Cookie': `token=${token}`
+  },
+data: updatedBooking
+});
+  // Step 3 — Assert response status and updated values
+
+    const body = await response.json();
+    expect(response.status()).toBe(200);
+    expect(body.firstname).toBe(updatedBooking.firstname);
+    expect(body.lastname).toBe(updatedBooking.lastname);
+});
