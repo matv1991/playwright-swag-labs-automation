@@ -5,6 +5,13 @@ import { CheckoutStepOnePage } from '../pages/CheckoutStepOnePage';
 import { CheckoutStepTwoPage } from '../pages/CheckoutStepTwoPage';
 import { CheckoutCompletePage } from '../pages/CheckoutCompletePage';
 
+const checkoutErrorScenarios = [
+  { description: 'all fields missing', firstname: '', lastname: '', postalCode: '', expectedError: 'Error: First Name is required' },
+  { description: 'first name missing', firstname: '', lastname: 'van Dam', postalCode: 'H1N1R4', expectedError: 'Error: First Name is required' },
+  { description: 'Last Name missing', firstname: 'Mathijs', lastname: '', postalCode: 'H1N1R4', expectedError: 'Error: Last Name is required' },
+  { description: 'Postal Code missing', firstname: 'Mathijs', lastname: 'van Dam', postalCode: '', expectedError: 'Error: Postal Code is required' },
+];
+
 test.beforeEach(async ({ page }) => {
   await page.goto('/inventory.html');
   const inventoryPage = new InventoryPage(page);
@@ -43,4 +50,19 @@ test('user can complete the checkout flow', async ({ page }) => {
   await checkoutStepTwoPage.finishButton.click();
   await expect(page).toHaveURL(/checkout-complete/);
   await checkoutCompletePage.assertTitle('Checkout: Complete!');
+  
 });
+
+for (const { description, firstname, lastname, postalCode, expectedError } of checkoutErrorScenarios) {
+  test(`Your information error: ${description}`, {
+    tag: ['@regression'],
+  }, async ({ page }) => {
+    const cartPage = new CartPage(page);
+    const checkoutStepOnePage = new CheckoutStepOnePage(page);
+    await page.goto('/cart.html');
+    await cartPage.checkoutButton.click();
+    await checkoutStepOnePage.fillForm(firstname, lastname, postalCode);
+    await checkoutStepOnePage.continueButton.click();
+    await expect(page.locator('[data-test="error"]')).toHaveText(expectedError);
+  });
+}
